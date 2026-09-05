@@ -1,0 +1,59 @@
+name: Release
+
+# Trigger on version tags like v1.0.0, v1.1.0, v2.0.0
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & test Windows executable
+    runs-on: windows-latest
+    permissions:
+      contents: write # needed to publish the GitHub Release and upload assets
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller pytest
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Build Windows executable
+        run: pyinstaller --noconfirm PaperHeart.spec
+
+      - name: Verify executable was produced
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist\PaperHeart.exe")) {
+            throw "PyInstaller did not produce dist\PaperHeart.exe"
+          }
+
+      - name: Rename executable for release
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $target = "dist\PaperHeart-$tag-Windows.exe"
+          Move-Item "dist\PaperHeart.exe" $target
+          echo "ASSET_PATH=$target" >> $env:GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET_PATH }}
+          generate_release_notes: true
+          name: PaperHeart ${{ github.ref_name }}
