@@ -36,6 +36,7 @@ __pycache__/
 .venv/
 venv/
 env/
+.buildvenv/
 
 # IDE and editor files
 .idea/

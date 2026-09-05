@@ -1021,7 +1021,7 @@ class HomePage(ttk.Frame):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("PaperHeart — Offline PDF Toolkit")
+        self.title("PaperHeart - Offline PDF Toolkit")
         self.geometry("1180x760")
         self.minsize(960, 620)
         self.configure(bg=BG)
